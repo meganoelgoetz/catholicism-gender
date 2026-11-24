@@ -1,6 +1,6 @@
 # Catholicism and Gender
 
-A reading library of Catholic teaching, academic scholarship, popular essays, and research summaries.
+A personal project collecting primary sources and original articles exploring the topics of Catholicism and gender over time.
 
 **Read and search:** [Catholicism & Gender](https://meganoelgoetz.github.io/catholicism-gender/)
 
@@ -9,11 +9,10 @@ A reading library of Catholic teaching, academic scholarship, popular essays, an
 - [Academic](academic/): scholarship and philosophical perspectives.
 - [Magisterial](magisterial/): Church documents and papal teaching.
 - [Popular](popular/): essays and conversations.
-- [Summaries](summaries/): research notes, excerpts, and comparative analysis.
 
 The website renders Markdown as readable pages with clickable folders and fuzzy search across titles, folder names, and full document text. Search tolerates small spelling mistakes and transposed letters. Press `/` to focus search and Escape to close it.
 
-`assets/` supports embedded images but is not listed or searched. `original-non-markdown/` is excluded from the website entirely. Both remain accessible in this public GitHub repository.
+`assets/` supports embedded images but is not listed or searched. `original-non-markdown/` and `summaries/` are excluded from the website entirely, including its search index.
 
 ## Updating the library
 

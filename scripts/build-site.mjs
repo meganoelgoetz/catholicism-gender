@@ -4,7 +4,7 @@ import {fileURLToPath, pathToFileURL} from 'node:url';
 const {Marked} = await import(process.env.MARKED_MODULE_PATH ? pathToFileURL(process.env.MARKED_MODULE_PATH).href : 'marked');
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const output = path.join(root, 'dist');
-const ignored = new Set(['assets', 'original-non-markdown', 'node_modules', 'dist', 'site', 'scripts', 'tests']);
+const ignored = new Set(['assets', 'original-non-markdown', 'summaries', 'node_modules', 'dist', 'site', 'scripts', 'tests']);
 const escape = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const url = s => s.split('/').map(encodeURIComponent).join('/');
 const label = s => s.replace(/[-_]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
@@ -48,7 +48,7 @@ await fs.copyFile(path.join(root,'site/search.js'),path.join(output,'site-assets
 await fs.copyFile(path.join(root,'site/fuzzy.mjs'),path.join(output,'site-assets/fuzzy.mjs'));
 try { await fs.cp(path.join(root,'assets'),path.join(output,'assets'),{recursive:true}); } catch(e) { if(e.code!=='ENOENT') throw e; }
 const topFolders=[...folders].filter(f=>!f.includes('/')).sort();
-const descriptions={academic:'Scholarship and philosophical perspectives.',magisterial:'Church documents, declarations, and papal teaching.',popular:'Essays, conversations, and lived experience.',summaries:'Research notes, excerpts, and comparative analysis.'};
+const descriptions={academic:'Scholarship and philosophical perspectives.',magisterial:'Church documents, declarations, and papal teaching.',popular:'Essays, conversations, and lived experience.'};
 const home=`<section class="intro"><p class="lede">This is a personal project collecting primary sources and original articles exploring the topics of Catholicism and gender over time.</p><p class="library-count">${documents.length} documents across ${topFolders.length} collections</p></section><section aria-labelledby="collections-title"><h2 id="collections-title">Browse the collections</h2><div class="collections">${topFolders.map(f=>`<a class="collection" href="${url(f)}/index.html"><span class="eyebrow">${counts(f)} DOCUMENTS</span><h3>${escape(label(f))}</h3><p>${escape(descriptions[f]||'Explore the documents in this collection.')}</p><span class="collection-action">Open collection</span></a>`).join('')}</div></section><section class="all-documents"><h2>All documents</h2>${cards(documents)}</section>`;
 await fs.writeFile(path.join(output,'index.html'),shell('Reading library',home));
 for(const folder of folders) {
