@@ -45,7 +45,7 @@ await fs.rm(output,{recursive:true,force:true});
 await fs.mkdir(path.join(output,'site-assets'),{recursive:true});
 await fs.copyFile(path.join(root,'site/styles.css'),path.join(output,'site-assets/styles.css'));
 await fs.copyFile(path.join(root,'site/search.js'),path.join(output,'site-assets/search.js'));
-await fs.copyFile(path.join(root,'site/fuzzy.mjs'),path.join(output,'site-assets/fuzzy.mjs'));
+for(const file of ['fuzzy.mjs','highlights.mjs','article-search.mjs']) await fs.copyFile(path.join(root,'site',file),path.join(output,'site-assets',file));
 try { await fs.cp(path.join(root,'assets'),path.join(output,'assets'),{recursive:true}); } catch(e) { if(e.code!=='ENOENT') throw e; }
 const topFolders=[...folders].filter(f=>!f.includes('/')).sort();
 const descriptions={academic:'Scholarship and philosophical perspectives.',magisterial:'Church documents, declarations, and papal teaching.',popular:'Essays, conversations, and lived experience.'};

@@ -10,7 +10,7 @@ A personal project collecting primary sources and original articles exploring th
 - [Magisterial](magisterial/): Church documents and papal teaching.
 - [Popular](popular/): essays and conversations.
 
-The website renders Markdown as readable pages with clickable folders and fuzzy search across titles, folder names, and full document text. Search tolerates small spelling mistakes and transposed letters. Press `/` to focus search and Escape to close it.
+The website renders Markdown as readable pages with clickable folders and fuzzy search across titles, folder names, and full document text. Search tolerates small spelling mistakes and transposed letters. Search results highlight matching text, including the corrected spelling of fuzzy matches. Opening a result carries the query into the article. The article’s find bar shows the current match and total count; Previous/Next, Enter/Shift+Enter, and F3/Shift+F3 move between hits. When a highlight has focus, Tab/Shift+Tab also moves between hits, and Escape returns to the find field. Query and hit position persist in the URL through refreshes. Use Back to search results to return with the filter intact, or Clear to remove highlights. Press `/` to focus library search and Escape to close its results.
 
 `assets/` supports embedded images but is not listed or searched. `original-non-markdown/` and `summaries/` are excluded from the website entirely, including its search index.
 

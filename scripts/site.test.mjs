@@ -18,3 +18,21 @@ test('searches body text and folder names and requires all terms',()=>{
  assert.equal(search(docs,'').length,0);
  assert.equal(search(docs,'zzzzzzzzz').length,0);
 });
+
+import {matchRanges,normalizedText} from '../site/highlights.mjs';
+test('returns the actual fuzzy spelling for highlighting',()=>{
+ const result=search(docs,'conscince')[0];
+ assert.deepEqual(result.matchedTerms,['conscience']);
+ const {start,end}=matchRanges(result.text,result.matchedTerms)[0];
+ assert.equal(result.text.slice(start,end),'Conscience');
+ assert.deepEqual(search(docs,'academic gendre')[0].matchedTerms,['academic','gender']);
+});
+test('maps highlights to original case, accents, ligatures and repeated text',()=>{
+ const text='Café CAFE cafe\u0301 · ﬁdelity';
+ assert.deepEqual(matchRanges(text,['cafe']).map(r=>text.slice(r.start,r.end)),['Café','CAFE','cafe\u0301']);
+ assert.deepEqual(matchRanges(text,['fidelity']).map(r=>text.slice(r.start,r.end)),['ﬁdelity']);
+ assert.equal(normalizedText('ab—cd').value,'ab cd');
+ assert.equal(matchRanges('Gendered gender',['gender']).length,2);
+ assert.equal(matchRanges('gender',['gen','gender']).length,1);
+ assert.deepEqual(matchRanges('<script> []',[]),[]);
+});

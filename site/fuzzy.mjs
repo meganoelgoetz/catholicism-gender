@@ -19,11 +19,11 @@ export function search(documents,query) {
  const terms=normalize(query).split(' ').filter(Boolean);
  if(!terms.length) return [];
  return documents.map(doc=>{
-  let score=0,matchedWord='';
+  let score=0,matchedWord='',matchedTerms=[];
   for(const term of terms) {
-   if(doc.normalizedTitle.includes(term)) {score+=12;matchedWord ||= term;continue;}
-   if(doc.normalizedFolder.includes(term)) {score+=8;matchedWord ||= term;continue;}
-   if(doc.normalizedText.includes(term)) {score+=5;matchedWord ||= term;continue;}
+   if(doc.normalizedTitle.includes(term)) {score+=12;matchedWord ||= term;matchedTerms.push(term);continue;}
+   if(doc.normalizedFolder.includes(term)) {score+=8;matchedWord ||= term;matchedTerms.push(term);continue;}
+   if(doc.normalizedText.includes(term)) {score+=5;matchedWord ||= term;matchedTerms.push(term);continue;}
    const limit=term.length<4?0:term.length<8?1:2;
    let best=limit+1,word='';
    for(const candidate of doc.words) {
@@ -33,8 +33,8 @@ export function search(documents,query) {
     if(best===0) break;
    }
    if(best>limit) return null;
-   score+=3-best;matchedWord ||= word;
+   score+=3-best;matchedWord ||= word;matchedTerms.push(word);
   }
-  return {...doc,score,matchedWord};
+  return {...doc,score,matchedWord,matchedTerms:[...new Set(matchedTerms)]};
  }).filter(Boolean).sort((a,b)=>b.score-a.score||a.title.localeCompare(b.title));
 }
