@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import {createHash} from 'node:crypto';
 import {fileURLToPath, pathToFileURL} from 'node:url';
 const {Marked} = await import(process.env.MARKED_MODULE_PATH ? pathToFileURL(process.env.MARKED_MODULE_PATH).href : 'marked');
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -26,6 +27,13 @@ async function scan(relative='') {
   }
 }
 await scan();
+const assetFiles=['styles.css','search.js','fuzzy.mjs','highlights.mjs','article-search.mjs'];
+const assetSources=new Map(await Promise.all(assetFiles.map(async file=>[file,await fs.readFile(path.join(root,'site',file),'utf8')])));
+const digest=createHash('sha256');
+for(const [file,source] of assetSources)digest.update(file).update(source);
+digest.update(JSON.stringify(documents.map(({file,markdown})=>({file,markdown}))));
+const assetVersion=digest.digest('hex').slice(0,16);
+const versionedAsset=file=>file.replace(/(\.[^.]+)$/,`.${assetVersion}$1`);
 const counts = folder => documents.filter(d=>d.folder===folder || d.folder.startsWith(folder+'/')).length;
 function nav(prefix,active='') {
   return `<nav class="sidebar" aria-label="Library folders"><a class="nav-home" href="${prefix}index.html">All documents <span>${documents.length}</span></a><p class="eyebrow">COLLECTIONS</p>${[...folders].sort().map(f=>`<a ${active===f?'aria-current="page"':''} style="--depth:${f.split('/').length-1}" href="${prefix}${url(f)}/index.html">${escape(label(f.split('/').at(-1)))}<span>${counts(f)}</span></a>`).join('')}</nav>`;
@@ -34,7 +42,7 @@ function shell(title,content,relative='',active='') {
  const depth=relative?relative.split('/').length:0;
  const prefix='../'.repeat(depth);
  const crumb=relative?relative.split('/').map((s,i,a)=>`<a href="${prefix}${url(a.slice(0,i+1).join('/'))}/index.html">${escape(label(s))}</a>`).join('<span aria-hidden="true">/</span>'):'';
- return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="A searchable reading library on Catholicism, sex, gender, and conscience."><title>${escape(title)} · Catholicism &amp; Gender</title><link rel="stylesheet" href="${prefix}site-assets/styles.css"><script type="module" src="${prefix}site-assets/search.js"></script></head><body><a class="skip" href="#main">Skip to content</a><header class="masthead"><a class="brand" href="${prefix}index.html">Catholicism <span>&amp;</span> Gender</a><form class="search" role="search"><label for="search-input">Search the library</label><div class="search-control"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/></svg><input id="search-input" type="search" placeholder="Search titles, ideas, or passages…" autocomplete="off" aria-controls="search-results"><button type="button" id="clear-search" aria-label="Clear search" hidden>×</button></div></form></header><div class="search-panel" id="search-panel" hidden><div class="search-summary"><p id="search-status" role="status" aria-live="polite"></p><button id="close-search" type="button">Close search</button></div><ol id="search-results"></ol></div><div class="layout">${nav(prefix,active)}<main id="main">${crumb?'<div class="breadcrumbs">'+crumb+'</div>':''}${content}</main></div><footer>Collected readings and research · Catholicism &amp; Gender</footer></body></html>`;
+ return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="A searchable reading library on Catholicism, sex, gender, and conscience."><title>${escape(title)} · Catholicism &amp; Gender</title><link rel="stylesheet" href="${prefix}site-assets/${versionedAsset('styles.css')}"><script type="module" src="${prefix}site-assets/${versionedAsset('search.js')}"></script></head><body><a class="skip" href="#main">Skip to content</a><header class="masthead"><a class="brand" href="${prefix}index.html">Catholicism <span>&amp;</span> Gender</a><form class="search" role="search"><label for="search-input">Search the library</label><div class="search-control"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/></svg><input id="search-input" type="search" placeholder="Search titles, ideas, or passages…" autocomplete="off" aria-controls="search-results"><button type="button" id="clear-search" aria-label="Clear search" hidden>×</button></div></form></header><div class="search-panel" id="search-panel" hidden><div class="search-summary"><p id="search-status" role="status" aria-live="polite"></p><button id="close-search" type="button">Close search</button></div><ol id="search-results"></ol></div><div class="layout">${nav(prefix,active)}<main id="main">${crumb?'<div class="breadcrumbs">'+crumb+'</div>':''}${content}</main></div><footer>Collected readings and research · Catholicism &amp; Gender</footer></body></html>`;
 }
 function cards(list,prefix='') {
  return `<ul class="document-list">${list.map(d=>`<li><a href="${prefix}${d.url}"><span class="document-title">${escape(d.title)}</span><span class="document-description">${escape(d.text.replace(d.title,'').trim().slice(0,180))}…</span><span class="document-meta">${escape(label(d.folder))} · ${Math.max(1,Math.ceil(d.text.split(/\s+/).length/220))} min read</span></a></li>`).join('')}</ul>`;
@@ -43,9 +51,16 @@ await fs.mkdir(output,{recursive:true});
 // Only generated output is replaced; source documents are never changed.
 await fs.rm(output,{recursive:true,force:true});
 await fs.mkdir(path.join(output,'site-assets'),{recursive:true});
-await fs.copyFile(path.join(root,'site/styles.css'),path.join(output,'site-assets/styles.css'));
-await fs.copyFile(path.join(root,'site/search.js'),path.join(output,'site-assets/search.js'));
-for(const file of ['fuzzy.mjs','highlights.mjs','article-search.mjs']) await fs.copyFile(path.join(root,'site',file),path.join(output,'site-assets',file));
+for(const [file,original] of assetSources) {
+ let source=original;
+ if(/\.m?js$/.test(file)) {
+  source=source.replace(/(['"])\.\/(fuzzy\.mjs|highlights\.mjs|article-search\.mjs)\1/g,(_,quote,name)=>`${quote}./${versionedAsset(name)}${quote}`);
+  source=source.replace("new URL('search-index.json',root)",`new URL('search-index.json?v=${assetVersion}',root)`);
+ }
+ await fs.writeFile(path.join(output,'site-assets',versionedAsset(file)),source);
+ // Keep legacy entry points for previously cached HTML while new pages use hashes.
+ await fs.writeFile(path.join(output,'site-assets',file),source);
+}
 try { await fs.cp(path.join(root,'assets'),path.join(output,'assets'),{recursive:true}); } catch(e) { if(e.code!=='ENOENT') throw e; }
 const topFolders=[...folders].filter(f=>!f.includes('/')).sort();
 const descriptions={academic:'Scholarship and philosophical perspectives.',magisterial:'Church documents, declarations, and papal teaching.',popular:'Essays, conversations, and lived experience.'};

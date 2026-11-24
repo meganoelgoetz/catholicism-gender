@@ -6,7 +6,7 @@ const root=new URL('../',import.meta.url);
 let indexPromise,timer,request=0;
 const load=()=>indexPromise ||= fetch(new URL('search-index.json',root)).then(r=>{if(!r.ok)throw Error('Index unavailable');return r.json();}).then(prepare).catch(e=>{indexPromise=null;throw e;});
 function saveQuery(value){const url=new URL(location.href);if(value.trim())url.searchParams.set('q',value.trim());else url.searchParams.delete('q');history.replaceState(history.state,'',url);}
-function syncInput(value){input.value=value;clear.hidden=!value;panel.hidden=true;request++;saveQuery(value);}
+function syncInput(value){clearTimeout(timer);input.value=value;clear.hidden=!value;panel.hidden=true;request++;saveQuery(value);}
 const initialQuery=new URL(location.href).searchParams.get('q')||'';input.value=initialQuery;clear.hidden=!initialQuery;
 const articleSearch=setupArticleSearch({root,onQueryChange:syncInput});
 function close(){clearTimeout(timer);panel.hidden=true;request++;}
@@ -25,6 +25,7 @@ input.addEventListener('input',()=>{
   timer=setTimeout(()=>{articleSearch?.apply(input.value);run(version);},180);
 });
 async function run(version){
+ if(version!==request)return;
  const query=input.value.trim();panel.hidden=false;status.textContent='Searching…';
  try {
   const docs=await load();if(version!==request)return;
