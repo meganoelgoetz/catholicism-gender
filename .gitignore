@@ -221,3 +221,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Reading-library build dependencies
+node_modules/
+/dist/
+
+# This project keeps its website source in site/.
+!/site/
+!/site/**

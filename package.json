@@ -1,0 +1,8 @@
+{
+  "name": "catholicism-gender-library",
+  "private": true,
+  "type": "module",
+  "scripts": {"build": "node scripts/build-site.mjs", "test": "node --test scripts/site.test.mjs"},
+  "devDependencies": {"marked": "17.0.5"},
+  "engines": {"node": ">=22"}
+}
